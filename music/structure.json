@@ -1,0 +1,19 @@
+{
+  "version": 3,
+  "bpm": 144,
+  "beatsPerBar": 4,
+  "bars": 54,
+  "key": "D 宫调五声（D E F# A B）",
+  "note": "全片唯一的节拍骨架（v3：144 BPM、54 小节、90 秒）。画面（src/engine/beat.ts）和配乐（music/compose.mjs）都从这里读时间；改这里两边一起变。v2 存档在 music/v2/。",
+  "sections": [
+    { "id": "boot",   "title": "开场",     "startBar": 0,  "bars": 4,  "energy": 0.15, "paper": true  },
+    { "id": "lock",   "title": "锁定",     "startBar": 4,  "bars": 4,  "energy": 0.45, "paper": true  },
+    { "id": "drop1",  "title": "城墙爆发", "startBar": 8,  "bars": 8,  "energy": 0.85, "paper": false },
+    { "id": "glitch", "title": "数据故障", "startBar": 16, "bars": 6,  "energy": 0.70, "paper": true  },
+    { "id": "youth",  "title": "青年",     "startBar": 22, "bars": 10, "energy": 0.75, "paper": true  },
+    { "id": "gen",    "title": "地形生成", "startBar": 32, "bars": 4,  "energy": 0.30, "paper": false },
+    { "id": "build",  "title": "蓄力",     "startBar": 36, "bars": 4,  "energy": 0.80, "paper": false },
+    { "id": "drop2",  "title": "双向奔赴", "startBar": 40, "bars": 10, "energy": 1.00, "paper": false },
+    { "id": "outro",  "title": "片尾",     "startBar": 50, "bars": 4,  "energy": 0.25, "paper": true  }
+  ]
+}

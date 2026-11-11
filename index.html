@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>南京，正在生成 · 预览</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; background: #050506; overflow: hidden; }
+    #stage { position: fixed; inset: 0; display: grid; place-items: center; }
+    canvas { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; display: block; }
+    #controls { position: fixed; left: 20px; right: 20px; bottom: 18px; display: flex; align-items: center; gap: 16px; background: #151515; color: #eee9df; padding: 12px 18px; font: 14px/1.5 sans-serif; }
+    #seek { flex: 1; accent-color: #e2382b; }
+    #play { border: 0; background: #eee9df; padding: 8px 20px; cursor: pointer; }
+    #status { position: fixed; top: 12px; left: 20px; color: #aaa; font: 12px sans-serif; }
+    body.hide-ui #controls, body.hide-ui #status { display: none; }
+  </style>
+</head>
+<body>
+  <div id="stage"><canvas id="c" width="1920" height="1080"></canvas></div>
+  <div id="status"></div>
+  <div id="controls"><button id="play" type="button">播放</button><input id="seek" aria-label="进度" type="range" min="0" step="0.0166666667" value="0"><span id="ui"></span></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

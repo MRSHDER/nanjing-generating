@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "bpm": 128,
+  "beatsPerBar": 4,
+  "bars": 48,
+  "key": "D 宫调五声（D E F# A B）",
+  "note": "全片唯一的节拍骨架。画面（src/engine/beat.ts）和配乐（music/compose.mjs）都从这里读时间；改这里两边一起变。",
+  "sections": [
+    { "id": "boot",   "title": "启动",     "startBar": 0,  "bars": 4, "energy": 0.15, "paper": false },
+    { "id": "lock",   "title": "锁定",     "startBar": 4,  "bars": 4, "energy": 0.45, "paper": true  },
+    { "id": "drop1",  "title": "第一次爆发", "startBar": 8,  "bars": 8, "energy": 0.85, "paper": false },
+    { "id": "glitch", "title": "故障",     "startBar": 16, "bars": 4, "energy": 0.65, "paper": true  },
+    { "id": "youth",  "title": "青年",     "startBar": 20, "bars": 8, "energy": 0.75, "paper": false },
+    { "id": "gen",    "title": "正在生成", "startBar": 28, "bars": 4, "energy": 0.30, "paper": false },
+    { "id": "build",  "title": "蓄力",     "startBar": 32, "bars": 4, "energy": 0.80, "paper": false },
+    { "id": "drop2",  "title": "双向奔赴", "startBar": 36, "bars": 8, "energy": 1.00, "paper": false },
+    { "id": "outro",  "title": "收尾",     "startBar": 44, "bars": 4, "energy": 0.25, "paper": true  }
+  ]
+}

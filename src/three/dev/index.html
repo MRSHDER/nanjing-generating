@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>三维层测试页（Claude 自用）</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    canvas { position: fixed; inset: 0; margin: auto; width: min(100vw, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9; height: auto; }
+    #ui { position: fixed; left: 12px; bottom: 10px; color: #8a8780; font: 12px Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="ui"></div>
+  <script type="module" src="./dev.ts"></script>
+</body>
+</html>

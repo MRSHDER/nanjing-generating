@@ -1,0 +1,16 @@
+node_modules/
+dist/
+out/
+preview/
+reference/
+.env
+.env.*
+*.key
+*.pem
+*.log
+*.zip
+*.mp4
+*.webm
+*.wav
+.DS_Store
+Thumbs.db
