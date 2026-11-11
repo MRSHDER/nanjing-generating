@@ -4,10 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5173",
+    "dev": "vite --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "stills": "node scripts/render.mjs stills",
-    "music": "node music/compose.mjs"
+    "music": "node music/compose.mjs",
+    "build": "npm run music && vite build --target esnext --base ./ && mkdir -p dist/out/music && cp out/music/score.wav dist/out/music/score.wav"
   },
   "devDependencies": {
     "@types/three": "^0.169.0",

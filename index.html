@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>南京，正在生成 · 预览</title>
+  <title>南京，正在生成 · 在线播放</title>
   <link rel="icon" href="data:,">
   <style>
     html, body { margin: 0; height: 100%; background: #050506; overflow: hidden; }
@@ -14,12 +14,24 @@
     #play { border: 0; background: #eee9df; padding: 8px 20px; cursor: pointer; }
     #status { position: fixed; top: 12px; left: 20px; color: #aaa; font: 12px sans-serif; }
     body.hide-ui #controls, body.hide-ui #status { display: none; }
+  button:disabled { opacity: .5; cursor: wait; }
+    #seek { min-width: 50px; }
+    #ui { font-variant-numeric: tabular-nums; }
+    #stage { bottom: 84px; }
+    canvas { max-height: calc(100dvh - 100px); width: min(100vw, calc((100dvh - 100px) * 16 / 9)); object-fit: contain; }
+    #controls { border-radius: 10px; bottom: max(12px, env(safe-area-inset-bottom)); }
+    @media (max-width: 700px) {
+      #controls { left: 10px; right: 10px; padding: 8px 10px; gap: 10px; flex-wrap: wrap; }
+      #play { min-height: 44px; padding: 8px 16px; }
+      #ui { width: 100%; font-size: 11px; }
+      #status { left: 12px; right: 12px; font-size: 11px; line-height: 1.5; }
+    }
   </style>
 </head>
 <body>
   <div id="stage"><canvas id="c" width="1920" height="1080"></canvas></div>
-  <div id="status"></div>
-  <div id="controls"><button id="play" type="button">播放</button><input id="seek" aria-label="进度" type="range" min="0" step="0.0166666667" value="0"><span id="ui"></span></div>
-  <script type="module" src="/src/main.ts"></script>
+  <div id="status" role="status">正在加载画面与字体…</div>
+  <div id="controls"><button id="play" disabled type="button">播放</button><input id="seek" aria-label="进度" type="range" min="0" step="0.0166666667" value="0"><span id="ui"></span></div>
+  <script type="module" src="/src/entry.ts"></script>
 </body>
 </html>

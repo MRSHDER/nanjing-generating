@@ -31,7 +31,7 @@ const seek = document.getElementById('seek') as HTMLInputElement;
 const status = document.getElementById('status')!;
 const params = new URLSearchParams(location.search);
 window.__posterVariant = params.get('wutong') === 'portal' ? 'portal' : 'road';
-const requestedScale = Number(params.get('scale') ?? 1);
+const requestedScale = Number(params.get('scale') ?? (matchMedia('(max-width: 700px)').matches ? 0.5 : 1));
 const renderer = createRenderer(canvas, { scale: Number.isFinite(requestedScale) && requestedScale > 0 ? Math.min(2, requestedScale) : 1 });
 const post = new Post(renderer);
 const compositor = new Compositor(renderer);
@@ -48,12 +48,13 @@ const gen = createGenOverlay();
 const build = createBuildOverlay();
 const drop2 = createDrop2Overlay();
 const outro = createOutroOverlay();
-const audio = new Audio('/out/music/score.wav');
+const audio = new Audio(new URL('out/music/score.wav', document.baseURI).href);
 let recordingContext: AudioContext | undefined;
 let recordingSource: MediaElementAudioSourceNode | undefined;
 let recordingActive = false;
 let recordedFrames = 0;
 audio.preload = 'auto';
+audio.addEventListener('error', () => { status.textContent = '配乐加载失败，请刷新页面重试。'; });
 seek.max = String(IMPLEMENTED_END - 1 / FPS);
 if (params.get('ui') === '0') document.body.classList.add('hide-ui');
 
@@ -288,6 +289,7 @@ window.__movie = {
   },
 };
 
+play.disabled = false;
 status.textContent = `v3 配乐 · ${BPM} BPM · 全片 90 秒已组合（二维背景随三维镜头），尚非终版。`;
 refresh();
 window.__ready = true;
