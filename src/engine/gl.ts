@@ -9,13 +9,13 @@ export const W = 1920;
 export const H = 1080;
 export let SCALE = 1;
 
-export function createRenderer(canvas: HTMLCanvasElement, opts: { scale?: number } = {}) {
+export function createRenderer(canvas: HTMLCanvasElement, opts: { scale?: number; preserveDrawingBuffer?: boolean } = {}) {
   SCALE = opts.scale ?? 1;
   const r = new THREE.WebGLRenderer({
     canvas,
     antialias: false,
     alpha: false,
-    preserveDrawingBuffer: true, // 逐帧取图需要
+    preserveDrawingBuffer: opts.preserveDrawingBuffer ?? true, // 导出保持原设置；轻量在线播放无需持久缓冲
     powerPreference: 'high-performance',
   });
   r.setPixelRatio(1);

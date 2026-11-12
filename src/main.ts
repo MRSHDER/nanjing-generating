@@ -1,3 +1,4 @@
+import { playbackProfile, AudioFramePacer, type PlaybackQuality } from './engine/playback';
 import * as THREE from 'three';
 import '@fontsource/noto-sans-sc/900.css';
 import '@fontsource/noto-sans-sc/500.css';
@@ -19,9 +20,10 @@ import { getLayer3D, type Layer3D } from './three';
 import { lockBrickExitAnchor } from './three/lock';
 import { youthGenNight } from './three/youthGenTransition';
 import { drawPosterFrame } from './overlay2d/posterFrame';
-import { SUBTITLE_GLYPHS, drawSubtitleLabels } from './overlay2d/subtitles';
+import { SUBTITLE_GLYPHS, drawSubtitleLabels, subtitleAt } from './overlay2d/subtitles';
 const labelCanvas = () => Object.assign(document.createElement('canvas'), { width: 1920, height: 1080 });
-const subtitleLabels = { plate: labelCanvas(), text: labelCanvas(), rule: labelCanvas() };
+const subtitleLabels = { plate: labelCanvas(), text: labelCanvas(), rule: labelCanvas(), revision: 0 };
+let cachedSubtitle: ReturnType<typeof subtitleAt> = null;
 import { IMPLEMENTED_2D, IMPLEMENTED_END } from './timeline';
 
 const canvas = document.getElementById('c') as HTMLCanvasElement;
@@ -31,8 +33,22 @@ const seek = document.getElementById('seek') as HTMLInputElement;
 const status = document.getElementById('status')!;
 const params = new URLSearchParams(location.search);
 window.__posterVariant = params.get('wutong') === 'portal' ? 'portal' : 'road';
-const requestedScale = Number(params.get('scale') ?? (matchMedia('(max-width: 700px)').matches ? 0.5 : 1));
-const renderer = createRenderer(canvas, { scale: Number.isFinite(requestedScale) && requestedScale > 0 ? Math.min(2, requestedScale) : 1 });
+const qualityParam = params.get('quality');
+const quality: PlaybackQuality = qualityParam === 'smooth' || qualityParam === 'original' ? qualityParam : 'auto';
+const mobileDevice = matchMedia('(pointer: coarse)').matches || innerWidth <= 700 || (navigator.maxTouchPoints > 1 && /Macintosh|iPad|iPhone|Android/.test(navigator.userAgent));
+const profile = playbackProfile({ quality, mobile: mobileDevice, viewportWidth: innerWidth, explicitScale: params.has('scale') ? Number(params.get('scale')) : null });
+const renderer = createRenderer(canvas, profile);
+const qualitySelect = document.getElementById('quality') as HTMLSelectElement;
+qualitySelect.value = quality;
+qualitySelect.addEventListener('change', () => {
+  const url = new URL(location.href);
+  url.searchParams.set('quality', qualitySelect.value);
+  url.searchParams.set('t', String(audio.paused ? currentTime : audio.currentTime));
+  url.searchParams.delete('scale');
+  location.replace(url.href);
+});
+const framePacer = new AudioFramePacer();
+let lastUiUpdate = -Infinity;
 const post = new Post(renderer);
 const compositor = new Compositor(renderer);
 const portalCompositor = new Compositor(renderer);
@@ -124,15 +140,28 @@ export function renderAt(time: number) {
   }
   const backing = frame.section === 'glitch' ? glitch.backing : frame.section === 'youth' ? youth.backing : frame.section === 'gen' ? gen.backing : undefined;
   // 中英双语版式文字（Claude 2026-10-17）：三张独立遮罩，合成器固定配色叠在最上层
-  for (const canvas of [subtitleLabels.plate, subtitleLabels.text, subtitleLabels.rule]) { const c = canvas.getContext('2d')!; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, 1920, 1080); }
-  drawSubtitleLabels(subtitleLabels.plate.getContext('2d')!, subtitleLabels.text.getContext('2d')!, subtitleLabels.rule.getContext('2d')!, time);
-  const composed = compositor.front(masks, inkSpread ? true : paper, background.texture, backing, inkSpread, subtitleLabels);
+  const subtitle = subtitleAt(time);
+  const platedSubtitle = subtitle?.plated ? subtitle : null;
+  if (platedSubtitle && platedSubtitle !== cachedSubtitle) {
+    for (const label of [subtitleLabels.plate, subtitleLabels.text, subtitleLabels.rule]) {
+      const context = label.getContext('2d')!;
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.clearRect(0, 0, 1920, 1080);
+    }
+    drawSubtitleLabels(subtitleLabels.plate.getContext('2d')!, subtitleLabels.text.getContext('2d')!, subtitleLabels.rule.getContext('2d')!, time);
+    cachedSubtitle = platedSubtitle;
+    subtitleLabels.revision++;
+  }
+  const composed = compositor.front(masks, inkSpread ? true : paper, background.texture, backing, inkSpread, platedSubtitle ? subtitleLabels : undefined);
   post.finish(composed, effects, null, visualFrame.frame);
   if (recordingActive) recordedFrames++;
 }
 
-function refresh() {
+function refresh(forceUi = true) {
   renderAt(currentTime);
+  const now = performance.now();
+  if (!forceUi && now - lastUiUpdate < 250) return;
+  lastUiUpdate = now;
   seek.value = String(currentTime);
   play.textContent = audio.paused ? '播放' : '暂停';
   const frame = frameAt(currentTime);
@@ -141,6 +170,7 @@ function refresh() {
 }
 
 async function toggle() {
+  framePacer.reset();
   if (!audio.paused) audio.pause();
   else {
     if (currentTime >= IMPLEMENTED_END - 1 / FPS) currentTime = 0;
@@ -151,16 +181,23 @@ async function toggle() {
 }
 
 function goTo(time: number) {
+  framePacer.reset();
   audio.pause();
   currentTime = Math.max(0, Math.min(IMPLEMENTED_END - 1 / FPS, time));
   audio.currentTime = currentTime;
   refresh();
 }
 
+audio.addEventListener('ended', () => {
+  currentTime = IMPLEMENTED_END - 1 / FPS;
+  framePacer.reset();
+  refresh();
+});
+document.addEventListener('visibilitychange', () => framePacer.reset());
 play.addEventListener('click', () => void toggle());
 seek.addEventListener('input', () => goTo(Number(seek.value)));
 addEventListener('keydown', event => {
-  if ((event.target as HTMLElement).matches('button, input')) return;
+  if ((event.target as HTMLElement).matches('button, input, select')) return;
   if (event.code === 'Space') { event.preventDefault(); void toggle(); }
   else if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
     event.preventDefault();
@@ -170,10 +207,12 @@ addEventListener('keydown', event => {
 });
 
 function loop() {
-  if (!audio.paused) {
+  if (!audio.paused && (!document.hidden || recordingActive) && framePacer.shouldRender(audio.currentTime, recordingActive ? FPS : profile.fps)) {
+    // Audio is the master clock. Drop late visual frames instead of slowing the film.
     currentTime = Math.min(audio.currentTime, IMPLEMENTED_END - 1 / FPS);
-    if (audio.currentTime >= IMPLEMENTED_END) audio.pause();
-    refresh();
+    const reachedEnd = audio.currentTime >= IMPLEMENTED_END;
+    if (reachedEnd) audio.pause();
+    refresh(reachedEnd);
   }
   requestAnimationFrame(loop);
 }
@@ -290,6 +329,7 @@ window.__movie = {
 };
 
 play.disabled = false;
+qualitySelect.disabled = false;
 status.textContent = `v3 配乐 · ${BPM} BPM · 全片 90 秒已组合（二维背景随三维镜头），尚非终版。`;
 refresh();
 window.__ready = true;

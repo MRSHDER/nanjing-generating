@@ -4,12 +4,13 @@ import type { OverlayMask, OverlayRole } from '../overlay2d/boot';
 import { GLSL_SKY_NIGHT } from './transition.glsl';
 
 const ROLES: OverlayRole[] = ['muted', 'signal', 'foreground'];
-export interface SubtitleLabels { plate: HTMLCanvasElement; text: HTMLCanvasElement; rule: HTMLCanvasElement }
+export interface SubtitleLabels { plate: HTMLCanvasElement; text: HTMLCanvasElement; rule: HTMLCanvasElement; revision?: number }
 
 export class Compositor {
   private posterTarget = makeRT();
   private resultTarget = makeRT();
   private textures = new Map<HTMLCanvasElement, THREE.CanvasTexture>();
+  private textureRevisions = new WeakMap<HTMLCanvasElement, number>();
   private empty = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1);
   private pass = new FSPass(`
     uniform sampler2D tBase, tMuted, tSignal, tForeground, tBacking, tTypography, tPlate, tLabel, tRule;
@@ -63,7 +64,7 @@ export class Compositor {
     this.empty.needsUpdate = true;
   }
 
-  private texture(canvas: HTMLCanvasElement) {
+  private texture(canvas: HTMLCanvasElement, revision?: number) {
     let texture = this.textures.get(canvas);
     if (!texture) {
       texture = new THREE.CanvasTexture(canvas);
@@ -72,15 +73,18 @@ export class Compositor {
       texture.minFilter = THREE.LinearFilter;
       this.textures.set(canvas, texture);
     }
-    texture.needsUpdate = true;
+    if (revision === undefined || this.textureRevisions.get(canvas) !== revision) {
+      texture.needsUpdate = true;
+      if (revision !== undefined) this.textureRevisions.set(canvas, revision);
+    }
     return texture;
   }
 
   private draw(masks: OverlayMask[], layer: 'behind' | 'front', paper: boolean | number, target: THREE.WebGLRenderTarget, base?: THREE.Texture, backing?: HTMLCanvasElement, inkSpread?: { center: [number, number]; progress: number }, labels?: SubtitleLabels) {
     const uniforms = this.pass.u;
-    uniforms.tPlate!.value = labels ? this.texture(labels.plate) : this.empty;
-    uniforms.tLabel!.value = labels ? this.texture(labels.text) : this.empty;
-    uniforms.tRule!.value = labels ? this.texture(labels.rule) : this.empty;
+    uniforms.tPlate!.value = labels ? this.texture(labels.plate, labels.revision) : this.empty;
+    uniforms.tLabel!.value = labels ? this.texture(labels.text, labels.revision) : this.empty;
+    uniforms.tRule!.value = labels ? this.texture(labels.rule, labels.revision) : this.empty;
     uniforms.tBase!.value = base ?? this.empty;
     uniforms.uHasBase!.value = base ? 1 : 0;
     uniforms.uPaper!.value = typeof paper === 'number' ? paper : paper ? 1 : 0;
