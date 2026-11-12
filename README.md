@@ -2,6 +2,10 @@
 
 《南京，正在生成》程序化短片的源码快照。画面使用 TypeScript、Three.js / WebGL 与 Canvas 2D，配乐由 JavaScript 程序合成。
 
+**在线浏览：[南京，正在生成](https://mrshder.github.io/nanjing-generating/)**
+
+90 秒程序化短片，包含程序合成配乐。请使用支持 WebGL 的现代浏览器，打开后点击“播放”。
+
 ## 本地运行
 
 建议使用 Node.js 20 LTS 或更新的兼容版本。
@@ -16,10 +20,16 @@ npm run dev
 
 ```sh
 npm run typecheck
-npx vite build --target esnext
+npm run build
 ```
 
-构建成功不代表完整影片导出或所有视觉检查均通过。`out/music/score.wav` 使用运行时路径，Vite 静态构建不会自动把该音频复制进发布目录。本仓库不配置网站部署。
+`npm run build` 会生成配乐、构建页面，并将 `out/music/score.wav` 复制到发布目录。构建使用相对资源路径，适配 GitHub Pages 的项目子路径。
+
+## 在线部署
+
+推送到 `main` 分支后，GitHub Actions 会进行类型检查、构建和 GitHub Pages 发布。仓库 Settings → Pages → Source 应设为 GitHub Actions。本站使用默认 GitHub Pages 地址，无需配置自定义域名。
+
+构建和部署成功不代表完整影片导出或所有视觉检查均通过。播放需要浏览器支持 WebGL。
 
 ## 目录
 
